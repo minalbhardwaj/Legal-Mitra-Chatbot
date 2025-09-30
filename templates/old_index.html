@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Indian Law Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="sidebar">
+        <h1><span class="bold">Indian</span> <span class="red">Law</span><br>Assistant</h1>
+        <button id="new-conv">NEW CONVERSATION</button>
+        <h2>Previous Conversations</h2>
+        <div class="previous-conv">
+            {% for chat in previous_chats %}
+                <div class="old-chat">
+                <div><strong></strong> {{ chat.0|get('user')  }}</div>
+                <hr>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="chat-area">
+        <div class="conversation" id="conversation">
+            <p>Hello! I'm your Indian Law assistant. How can I help you today?</p>
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Ask a legal question..." />
+        </div>
+    </div>
+</div>
+
+<!-- Inside .previous-conv -->
+<div class="previous-conv" id="previous-conv" 
+    {% for chat in previous_chats %}
+        <div class="old-chat">
+            <strong>Conversation {{ loop.index }}:</strong><br>
+            {% for msg in chat %}
+                <div><strong>You:</strong> {{ msg.user }}</div>
+                <div><strong>Bot:</strong> {{ msg.bot }}</div>
+            {% endfor %}
+            <hr>
+        </div>
+    {% endfor %}
+</div>
+<script>
+    document.getElementById("user-input").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            const input = this.value;
+            if (!input.trim()) return;
+    
+            const convo = document.getElementById("conversation");
+            convo.innerHTML += `<p class="user-msg">${input}</p>`;
+            this.value = "";
+    
+            fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: input })
+            })
+            .then(response => response.json())
+            .then(data => {
+                convo.innerHTML += `<p class="bot-msg">${data.answer}</p>`;
+                convo.scrollTop = convo.scrollHeight;
+            });
+        }
+    });
+    
+    document.getElementById("new-conv").addEventListener("click", function() {
+        fetch("/new_conversation", { method: "POST" })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("conversation").innerHTML = '<p>Hello! I\'m your Indian Law assistant. How can I help you today?</p>';
+                    location.reload();  // reload to refresh previous conversations
+                }
+            });
+    });
+    </script>
+    </body>
+</html>

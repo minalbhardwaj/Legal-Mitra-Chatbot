@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Department of Justice Chatbot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="background"></div>
+  <div class="chat-container">
+    <div class="chat-header">⚖️ Legal Mitra ⚖️ </div>
+    <div class="chat-box" id="chat-box"></div>
+    <div id="typing-indicator" class="typing-indicator hidden">Bot is typing<span>.</span><span>.</span><span>.</span></div>
+    <div class="chat-input">
+      <input type="text" id="message" placeholder="Type your message..." />
+      <button id="send-btn">Send</button>
+      <button onclick="startVoiceInput()">🎤</button>
+    </div>
+  </div>
+
+  <div class="floating-sidebar">
+    <button onclick="startNewChat()">➕ New Chat</button>
+    <button onclick="openHistory()">📜 History</button>
+    <button onclick="exportChat()">📤 Export</button>
+  </div>
+
+  <div class="chat-modal hidden" id="historyModal">
+    <div class="chat-modal-content">
+      <h3>📚 Previous Chats</h3>
+      <ul id="chat-list" class="chat-history-list">
+        {% for chat_id, chat_data in previous_chats.items() %}
+        <li class="chat-history-item">
+          <div class="chat-title" onclick="load_msg('{{ chat_id }}')">
+            🗂️ {{ chat_data.title }}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="modal-footer">
+        <button onclick="closeHistory()" class="close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- ✅ Moved script to end of body -->
+  
+  <script  src="{{ url_for('static', filename='script.js') }}"></script>
+  <script>
+    var previous_chats = {{ previous_chats | tojson }};
+    debugger
+    function load_msg(index) {
+        chatBox.innerHTML = "";
+        console.log(previous_chats[index])
+        let conversation = previous_chats[index]['converstion'];
+        conversation.forEach(pair => {
+          appendMessage('user', pair.user);
+          appendMessage('bot', pair.bot);
+        });
+    
+        closeHistory();
+      }
+  </script>
+</body>
+</html>

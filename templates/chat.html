@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Indian Law Chatbot</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #chat-container { border: 1px solid #ddd; border-radius: 5px; padding: 20px; height: 500px; overflow-y: auto; }
+        #user-input { width: 100%; padding: 10px; margin-top: 10px; }
+        button { padding: 10px 20px; margin-top: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        .user-msg { background: #e3f2fd; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .bot-msg { background: #f1f1f1; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; border-left: 3px solid #4CAF50; }
+        .similarity { font-size: 0.8em; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Indian Law Chatbot</h1>
+    <div id="chat-container"></div>
+    <input type="text" id="user-input" placeholder="Ask a legal question...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        
+        function addMessage(sender, message, results = []) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = sender === 'user' ? 'user-msg' : 'bot-msg';
+            msgDiv.innerHTML = `<strong>${sender === 'user' ? 'You' : 'Bot'}:</strong> ${message}`;
+            chatContainer.appendChild(msgDiv);
+            
+            if (results.length > 0) {
+                results.forEach(result => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'result';
+                    resultDiv.innerHTML = `
+                        <p>${result.answer}</p>
+                        <p class="similarity">Source: ${result.source} | Confidence: ${(result.similarity * 100).toFixed(1)}%</p>
+                    `;
+                    chatContainer.appendChild(resultDiv);
+                });
+            }
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            addMessage('user', message);
+            userInput.value = '';
+            
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    addMessage('bot', data.error);
+                } else {
+                    addMessage('bot', 'Here are the most relevant legal references:', data.results);
+                }
+            })
+            .catch(error => {
+                addMessage('bot', 'Sorry, there was an error processing your request.');
+                console.error(error);
+            });
+        }
+        
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
